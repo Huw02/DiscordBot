@@ -44,7 +44,7 @@ def fetch_schedule():
 
 
 tz = datetime.timezone(datetime.timedelta(hours=2))  # dansk sommertid
-@tasks.loop(time=datetime.time(hour=20, minute=0, tzinfo=tz))
+@tasks.loop(time=datetime.time(hour=11, minute=0, tzinfo=tz))
 async def send_schedule():
     await bot.wait_until_ready()  # sikrer at botten er klar
     channel = bot.get_channel(CHANNEL_ID)
