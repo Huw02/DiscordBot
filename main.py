@@ -1,3 +1,31 @@
+from ekSkemaScraper import scrapeTo as scrape_kea
+import requests
+import sys
+import io
+sys.stdout = io.TextIOWrapper(sys.stdout.detach(), encoding='utf-8')
+
+
+def main_job():
+    all_jobs = []
+
+    print("\n=== Scraping KEA ===", file=sys.stderr)
+    try:
+        all_jobs += scrape_kea()
+    except Exception as e:
+        print(f"⚠️ KEA scraper failed: {e}", file=sys.stderr)
+
+    if all_jobs:
+        print(f"🎉 Total scraped: {len(all_jobs)} jobs", file=sys.stderr)
+        # Kun JSON printes til stdout
+        print(all_jobs := all_jobs)  # dette kan bruges til Spring Boot, men bedre: json.dumps(all_jobs)
+        import json
+        print(json.dumps(all_jobs))
+        return all_jobs
+    else:
+        print("🚫 No jobs scraped.", file=sys.stderr)
+
+
+
 import discord
 from discord.ext import commands, tasks
 import datetime
@@ -10,7 +38,6 @@ load_dotenv()
 
 TOKEN = os.getenv("DISCORD_TOKEN")   # jeres bot token
 CHANNEL_ID = int(os.getenv("CHANNEL_ID"))  # ID på Discord kanal
-API_URL = os.getenv("API_URL")  # Spring Boot endpoint, fx: https://jeres-app.azurewebsites.net/api/schedule
 
 # Lav bot
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.default())
@@ -25,9 +52,8 @@ import requests
 
 def fetch_schedule():
     try:
-        response = requests.get(API_URL, timeout=10)
-        response.raise_for_status()
-        data = response.json()
+
+        data = main_job()
 
         print("DEBUG API:", data)  # kan slettes senere
 
@@ -44,7 +70,7 @@ def fetch_schedule():
 
 
 tz = datetime.timezone(datetime.timedelta(hours=2))  # dansk sommertid
-@tasks.loop(time=datetime.time(hour=18, minute=30, tzinfo=tz))
+@tasks.loop(time=datetime.time(hour=12, minute=00, tzinfo=tz))
 async def send_schedule():
     await bot.wait_until_ready()  # sikrer at botten er klar
     channel = bot.get_channel(CHANNEL_ID)
