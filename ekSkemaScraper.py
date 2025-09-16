@@ -133,16 +133,19 @@ def login(driver):
 
 def scrapeTo():
     options = uc.ChromeOptions()
+    options.binary_location = "/usr/bin/chromium"  # 👈 vigtig tilføjelse i Docker
+    options.add_argument("--headless=new")         # kør uden GUI
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
-    # options.add_argument("--headless")  # Uncomment for headless
 
-    class PatchedChrome(uc.Chrome):
-        def __del__(self):
-            pass  # suppress undetected_chromedriver cleanup bug
+    driver = uc.Chrome(options=options)
 
-    driver = PatchedChrome(options=options)
+    #class PatchedChrome(uc.Chrome):
+        #def __del__(self):
+            #pass  # suppress undetected_chromedriver cleanup bug
+
+    #driver = PatchedChrome(options=options)
     print("Browser launched")
 
     driver.get(URL)
@@ -188,7 +191,7 @@ def scrapeTo():
         time = parts[0].split(" ", 3)[0] + " " + parts[0].split(" ", 3)[1] + " " + parts[0].split(" ", 3)[2]
         subject = parts[1] if len(parts) > 1 else ""
         teacher = parts[2] if len(parts) > 2 else ""
-        room = parts[3].split(" Id ")[0] if len(parts) > 3 else ""
+        room = parts[-1].split(" Id ")[0] if len(parts) > 3 else ""
 
         data.append({
             "time": time,

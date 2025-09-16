@@ -40,7 +40,10 @@ TOKEN = os.getenv("DISCORD_TOKEN")   # jeres bot token
 CHANNEL_ID = int(os.getenv("CHANNEL_ID"))  # ID på Discord kanal
 
 # Lav bot
-bot = commands.Bot(command_prefix="!", intents=discord.Intents.default())
+intents = discord.Intents.default()
+intents.message_content = True
+bot = commands.Bot(command_prefix="!", intents=intents)
+
 
 @bot.event
 async def on_ready():
@@ -70,7 +73,7 @@ def fetch_schedule():
 
 
 tz = datetime.timezone(datetime.timedelta(hours=2))  # dansk sommertid
-@tasks.loop(time=datetime.time(hour=12, minute=00, tzinfo=tz))
+@tasks.loop(time=datetime.time(hour=7, minute=00, tzinfo=tz))
 async def send_schedule():
     await bot.wait_until_ready()  # sikrer at botten er klar
     channel = bot.get_channel(CHANNEL_ID)
@@ -96,14 +99,22 @@ async def send_schedule():
 @bot.command()
 async def skema(ctx):
     """Sender dagens skema på kommando (!skema)"""
+    await bot.wait_until_ready()  # sikrer at botten er klar
+    channel = bot.get_channel(CHANNEL_ID)
+    if channel is None:
+        print("FEJL: Kanalen findes ikke!")
+        return
+
     schedule = fetch_schedule()
-    print(fetch_schedule())
+    today = datetime.date.today().strftime("%d.%m.%Y")
+
     if schedule:
-        msg = "📅 Dagens skema:\n"
+        msg = f"📅 Skema for {today}:\n"
         for s in schedule:
-            msg += f"- {s['subject']} ({s['start']} - {s['end']}) i {s['room']}\n"
-        await ctx.send(msg)
+            time_only = s['time'].split()[1] if ' ' in s['time'] else s['time']
+            msg += f"- {s['subject']} kl. {time_only} i {s['room']}\n"
+        await channel.send(msg)
     else:
-        await ctx.send("Ingen undervisning i dag 🎉")
+        await channel.send(f"🎉 Ingen undervisning i dag ({today})")
 
 bot.run(TOKEN)
