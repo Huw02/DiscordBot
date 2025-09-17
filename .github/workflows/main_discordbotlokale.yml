@@ -9,6 +9,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
 
@@ -47,3 +50,4 @@ jobs:
           app-name: 'discordBotLokale'
           slot-name: 'Production'
           images: 'ghcr.io/huw02/discordbot:latest'
+
