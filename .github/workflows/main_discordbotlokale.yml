@@ -1,3 +1,6 @@
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+
 name: Build and deploy container app to Azure Web App - discordBotLokale
 
 on:
@@ -10,49 +13,51 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      packages: write
+      contents: read #This is required for actions/checkout
+
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Log in to GitHub Container Registry
+      - name: Log in to container registry
         uses: docker/login-action@v2
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: ghcr.io/
+          username: ${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_91E575F50D044CC1AD9ACBEEB612496D }}
+          password: ${{ secrets.AZUREAPPSERVICE_CONTAINERPASSWORD_9B4784BEE9F34761B30489DC954DB99C }}
 
-      - name: Build and push container image to GHCR
+      - name: Build and push container image to registry
         uses: docker/build-push-action@v3
         with:
           context: .
-          file: ./Dockerfile
           push: true
-          tags: ghcr.io/huw02/discordbot:latest
+          tags: ghcr.io/${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_91E575F50D044CC1AD9ACBEEB612496D }}/huw02/discordbot:${{ github.sha }}
+          file: ./Dockerfile
 
   deploy:
     runs-on: ubuntu-latest
     permissions:
-      id-token: write      # ✅ kræves for OIDC login til Azure
-      contents: read
+      id-token: write #This is required for requesting the JWT
+      contents: read #This is required for actions/checkout
+
     needs: build
-
+    
     steps:
-    - name: Login to Azure
-      uses: azure/login@v2
-      with:
-        client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_B35070C95B714963BB7DB10FCB2612BA }}
-        tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_2237320751384A1588946CB38A04E1CB }}
-        subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_CCA1161EB1C049BEAD710241007D5210 }}
+      
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_83FE403942A24800A1791C3D39D86DF1 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_19F11B97FCDF48AD874228DE376DBFC2 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_6B1C9DDCBA344214AEB0AC4EA8DC8AA8 }}
 
-    - name: Deploy to Azure Web App
-      uses: azure/webapps-deploy@v2
-      with:
-        app-name: 'discordBotLokale'
-        slot-name: 'Production'
-        images: 'ghcr.io/huw02/discordbot:latest'
-
-
+      - name: Deploy to Azure Web App
+        id: deploy-to-webapp
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: 'discordBotLokale'
+          slot-name: 'Production'
+          images: 'ghcr.io/${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_91E575F50D044CC1AD9ACBEEB612496D }}/huw02/discordbot:${{ github.sha }}'
+          
