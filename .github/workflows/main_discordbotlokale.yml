@@ -35,19 +35,24 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write      # ✅ kræves for OIDC login til Azure
+      contents: read
     needs: build
-    steps:
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_B35070C95B714963BB7DB10FCB2612BA }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_2237320751384A1588946CB38A04E1CB }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_CCA1161EB1C049BEAD710241007D5210 }}
 
-      - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: 'discordBotLokale'
-          slot-name: 'Production'
-          images: 'ghcr.io/huw02/discordbot:latest'
+    steps:
+    - name: Login to Azure
+      uses: azure/login@v2
+      with:
+        client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_B35070C95B714963BB7DB10FCB2612BA }}
+        tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_2237320751384A1588946CB38A04E1CB }}
+        subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_CCA1161EB1C049BEAD710241007D5210 }}
+
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: 'discordBotLokale'
+        slot-name: 'Production'
+        images: 'ghcr.io/huw02/discordbot:latest'
+
 
