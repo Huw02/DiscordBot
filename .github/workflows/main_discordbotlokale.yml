@@ -1,4 +1,4 @@
-name: Build and Deploy to Azure with GHCR
+name: Build and deploy container app to Azure Web App - discordBotLokale
 
 on:
   push:
@@ -7,14 +7,10 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-push:
+  build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write   # <-- Giver adgang til GHCR
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -26,33 +22,28 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push Docker image
+      - name: Build and push container image to GHCR
         uses: docker/build-push-action@v3
         with:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository }}:latest
+          tags: ghcr.io/huw02/discordbot:latest
 
-
-  deploy-to-azure:
+  deploy:
     runs-on: ubuntu-latest
-    needs: build-and-push
-    permissions:
-      id-token: write
-      contents: read
+    needs: build
     steps:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_B35070C95B714963BB7DB10FCB2612BA }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_2237320751384A1588946CB38A04E1CB }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_CCA1161EB1C049BEAD710241007D5210 }}
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
           app-name: 'discordBotLokale'
           slot-name: 'Production'
-          images: 'ghcr.io/${{ github.repository_owner }}/discordbot:latest'
-
+          images: 'ghcr.io/huw02/discordbot:latest'
